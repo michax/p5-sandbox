@@ -7,6 +7,7 @@ const logs = document.querySelector("#logs");
 window.guiRenderOverlay = true;
 window.triangles = {
     'topFlat': getFlatUpTriangle,
+    'topFlat1': getFlatUp1Triangle,
     'bottomFlat': getFlatDownTriangle,
     'complex': getComplexTriangle,
     'complex2': getComplexTriangle2,

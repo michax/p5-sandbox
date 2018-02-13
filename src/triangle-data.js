@@ -6,6 +6,14 @@ function getFlatUpTriangle(x, y, size = 100) {
     ]
 }
 
+function getFlatUp1Triangle(x, y, size = 100) {
+    return [
+        new p5.Vector(x, y),
+        new p5.Vector(x + size, y),
+        new p5.Vector(x + size + 50, y + size)
+    ]
+}
+
 function getFlatDownTriangle(x, y, size = 100) {
     return [
         new p5.Vector(x + size / 2, y),
