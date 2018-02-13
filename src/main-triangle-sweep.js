@@ -11,6 +11,7 @@ window.triangles = {
     'complex': getComplexTriangle,
     'complex2': getComplexTriangle2,
     'complex3': getComplexTriangle3,
+    'complex4': getComplexTriangle4,
 };
 window.triangleType = Object.keys(window.triangles);
 

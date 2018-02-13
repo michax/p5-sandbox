@@ -1,4 +1,3 @@
-
 function sortTrianglePoints(points) {
     const first = _.head(_.sortBy(points, 'y'));
     const size = 3;
@@ -38,26 +37,8 @@ function getEdges(triangle) {
     return [a, b, c];
 }
 
-function getFlatEdge(edges) {
-    return _.find(edges, (edge) => edge.vector.y === 0);
-}
-
 function getNonFlatEdges(edges) {
     return _.filter(edges, (edge) => edge.vector.y !== 0);
-}
-
-/**
- * Get general direction of edge pair.
- * Usefull for deriving direction of line sweep (up or down).
- * @param edgePair
- * @returns {number}
- */
-function getEdgePairDirection(edgePair) {
-    if (edgePair[0].vector.y < 0 || edgePair[1].vector.y < 0) {
-        return 1;
-    }
-
-    return -1;
 }
 
 function getEdgePairRoot(edgePair) {
@@ -75,7 +56,7 @@ function sweepComplex(edgeA, edgeB, edgeC) {
     ellipse(startX, startY, 10, 10);
 
     const minY = Math.min(edgeA.a.y, edgeB.a.y) - startY;
-    const maxY = Math.max(edgeA.a.y, edgeB.a.y, edgeC.a.y) - startY;
+    const maxY = Math.max(edgeA.a.y, edgeB.a.y) - startY;
 
     let x1 = startX;
     let x2 = startX;
@@ -92,9 +73,12 @@ function sweepComplex(edgeA, edgeB, edgeC) {
         x2 += dt2;
     }
 
+
     // Filling second part
     for (; y < startY + maxY; y++) {
         line(x1, y, x2, y);
+        // let dt1 = edgeA.vector.x / edgeA.vector.y;
+        // let dt2 = edgeC.vector.x / edgeC.vector.y;
         let dt1 = edgeC.vector.x / edgeC.vector.y;
         let dt2 = edgeB.vector.x / edgeB.vector.y;
 
@@ -145,8 +129,6 @@ function sweepFlat(edgeA, edgeB) {
 function sweep(triangle) {
     const edges = getEdges(triangle);
     const nonFlatEdges = getNonFlatEdges(edges);
-
-    console.log('[sweep] edges: ', nonFlatEdges);
 
     if (nonFlatEdges.length === 2) {
         // Flat triangle

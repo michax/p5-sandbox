@@ -38,6 +38,14 @@ function getComplexTriangle3(x, y, size = 100) {
     ]
 }
 
+function getComplexTriangle4(x, y, size = 100) {
+    return [
+        new p5.Vector(x, y),
+        new p5.Vector(x + size, y+ 20),
+        new p5.Vector(x + size, y + size)
+    ]
+}
+
 
 function getTriangles(x, y, size = 100) {
     return [
