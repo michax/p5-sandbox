@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>three.js webgl - raw shader</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<style>
+		body {
+			color: #ffffff;
+			font-family: Monospace;
+			font-size: 13px;
+			text-align: center;
+			font-weight: bold;
+
+			background-color: #000000;
+			margin: 0px;
+			overflow: hidden;
+		}
+
+		#info {
+			position: absolute;
+			top: 0px;
+			width: 100%;
+			padding: 5px;
+		}
+
+		a {
+			color: #ffffff;
+		}
+
+		#oldie a {
+			color: #da0
+		}
+	</style>
+</head>
+
+<body>
+
+	<div id="container"></div>
+	<div id="info">
+		<a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> - raw shader demo</div>
+
+	<script src="/libs/three.js"></script>
+
+	<script src="/libs/Detector.js"></script>
+	<script src="/libs/stats.min.js"></script>
+
+
+	<!-- https://threejs.org/docs/#api/renderers/webgl/WebGLProgram -->
+
+	<script id="vertexShader" type="x-shader/x-vertex">
+
+			precision mediump float;
+			precision mediump int;
+
+			// = object.matrixWorld
+			uniform mat4 modelMatrix;
+
+			// = camera.matrixWorldInverse * object.matrixWorld
+			uniform mat4 modelViewMatrix;
+
+			// = camera.projectionMatrix
+			uniform mat4 projectionMatrix;
+
+			// = camera.matrixWorldInverse
+			uniform mat4 viewMatrix;
+
+			// = inverse transpose of modelViewMatrix
+			uniform mat3 normalMatrix;
+
+			// = camera position in world space
+			uniform vec3 cameraPosition;
+
+			attribute vec3 position;
+			attribute vec4 color;
+
+			attribute vec2 uv;
+			attribute vec2 uv2;
+
+			varying vec3 vPosition;
+			varying vec4 vColor;
+
+			void main()	{
+
+				vPosition = position;
+				vColor = color;
+
+				gl_Position = modelViewMatrix * vec4( position, 1.0 );
+
+			}
+
+		</script>
+
+	<script id="fragmentShader" type="x-shader/x-fragment">
+
+			precision mediump float;
+			precision mediump int;
+
+			uniform float time;
+
+			varying vec3 vPosition;
+			varying vec4 vColor;
+
+			void main()	{
+
+				vec4 color = vec4( vColor );
+				color.r += sin( vPosition.x * 10.0 + time ) * 0.5;				
+
+				gl_FragColor = vec4(vPosition.x, vPosition.y, vPosition.z, 1.0);
+
+			}
+
+		</script>
+
+	<script>
+
+		if (!Detector.webgl) Detector.addGetWebGLMessage();
+
+		var container, stats;
+
+		var camera, scene, renderer;
+
+		init();
+		animate();
+
+		function init() {
+
+			container = document.getElementById('container');
+
+			camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 10);
+			camera.position.z = 2;
+
+			scene = new THREE.Scene();
+			scene.background = new THREE.Color(0x101010);
+
+			// geometry
+
+			var triangles = 500;
+
+			var geometry = new THREE.BufferGeometry();
+
+			var positions = [];
+			var colors = [];
+
+			colors = [
+				91.74304347337943,
+				146.6011736953273,
+				217.57974902995548,
+
+				190.33949424299323,
+				172.4538296671669,
+				28.03684286091241,
+
+				120.33288248870349,
+				195.14991383097887,
+				109.60443202608928,
+
+				55.00917239766229,
+				98.23541567833632,
+				217.39048753846544
+			];
+
+			positions2 = [
+				-0.03599148173218225,
+				0.249015380608961,
+				-0.13391156041857188,
+
+				-0.2612412598208973,
+				0.20965418679772796,
+				0.4695604456586864,
+				
+				-0.06607062135939268,
+				-0.3728506014806019,
+				-0.4830311942872765
+			];
+
+			positions = [
+				-1, -1, 1,
+				1, -1, 1,
+				1, 1, 1,
+			];
+
+			console.log(positions, colors);
+
+			var positionAttribute = new THREE.Float32BufferAttribute(positions, 3);
+			var colorAttribute = new THREE.Uint8BufferAttribute(colors, 4);
+
+			colorAttribute.normalized = true; // this will map the buffer values to 0.0f - +1.0f in the shader
+
+			geometry.addAttribute('position', positionAttribute);
+			geometry.addAttribute('color', colorAttribute);
+
+			// material
+
+			var material = new THREE.RawShaderMaterial({
+
+				uniforms: {
+					time: { value: 1.0 }
+				},
+				vertexShader: document.getElementById('vertexShader').textContent,
+				fragmentShader: document.getElementById('fragmentShader').textContent,
+				side: THREE.DoubleSide,
+				transparent: true
+
+			});
+
+			var mesh = new THREE.Mesh(geometry, material);
+			scene.add(mesh);
+
+			renderer = new THREE.WebGLRenderer();
+			renderer.setPixelRatio(window.devicePixelRatio);
+			renderer.setSize(512, 512);
+			container.appendChild(renderer.domElement);
+
+			stats = new Stats();
+			container.appendChild(stats.dom);
+
+			window.addEventListener('resize', onWindowResize, false);
+
+		}
+
+		function onWindowResize(event) {
+
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+
+			renderer.setSize(window.innerWidth, window.innerHeight);
+
+		}
+
+		//
+
+		function animate() {
+
+			requestAnimationFrame(animate);
+
+			render();
+			stats.update();
+
+		}
+
+		function render() {
+
+			var time = performance.now();
+
+			var object = scene.children[0];
+
+			// object.rotation.y = time * 0.0005;
+			// object.material.uniforms.time.value = time * 0.005;
+
+			renderer.render(scene, camera);
+
+		}
+
+	</script>
+
+</body>
+
+</html>
