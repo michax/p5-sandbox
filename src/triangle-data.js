@@ -30,6 +30,15 @@ function getComplexTriangle2(x, y, size = 100) {
     ]
 }
 
+function getComplexTriangle3(x, y, size = 100) {
+    return [
+        new p5.Vector(x + size, y),
+        new p5.Vector(x + size + 20, y + size),
+        new p5.Vector(x + 30, y + 10)
+    ]
+}
+
+
 function getTriangles(x, y, size = 100) {
     return [
         getFlatDownTriangle(x, y, size),

@@ -10,6 +10,7 @@ window.triangles = {
     'bottomFlat': getFlatDownTriangle,
     'complex': getComplexTriangle,
     'complex2': getComplexTriangle2,
+    'complex3': getComplexTriangle3,
 };
 window.triangleType = Object.keys(window.triangles);
 
@@ -38,9 +39,9 @@ function draw() {
             triData[1].x, triData[1].y,
             triData[2].x, triData[2].y
         );
-    }
 
-    if (guiRenderOverlay) {
-
+        if (guiRenderOverlay) {
+            sweep(triData);
+        }
     }
 }
