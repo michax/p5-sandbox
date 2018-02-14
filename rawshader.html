@@ -2,54 +2,52 @@
 <html lang="en">
 
 <head>
-	<title>three.js webgl - raw shader</title>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-	<style>
-		body {
-			color: #ffffff;
-			font-family: Monospace;
-			font-size: 13px;
-			text-align: center;
-			font-weight: bold;
+    <title>UV World Position</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        body {
+            color: #ffffff;
+            font-family: Monospace;
+            font-size: 13px;
+            text-align: center;
+            font-weight: bold;
 
-			background-color: #000000;
-			margin: 0px;
-			overflow: hidden;
-		}
+            background-color: #000000;
+            margin: 0px;
+            overflow: hidden;
+        }
 
-		#info {
-			position: absolute;
-			top: 0px;
-			width: 100%;
-			padding: 5px;
-		}
+        #info {
+            position: absolute;
+            top: 0px;
+            width: 100%;
+            padding: 5px;
+        }
 
-		a {
-			color: #ffffff;
-		}
+        a {
+            color: #ffffff;
+        }
 
-		#oldie a {
-			color: #da0
-		}
-	</style>
+        #oldie a {
+            color: #da0
+        }
+    </style>
 </head>
 
 <body>
 
-	<div id="container"></div>
-	<div id="info">
-		<a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> - raw shader demo</div>
+<div id="container"></div>
 
-	<script src="/libs/three.js"></script>
+<script src="libs/three.js"></script>
+<script src="libs/OBJLoader.js"></script>
 
-	<script src="/libs/Detector.js"></script>
-	<script src="/libs/stats.min.js"></script>
+<script src="libs/Detector.js"></script>
+<script src="libs/stats.min.js"></script>
 
+<!-- https://threejs.org/docs/#api/renderers/webgl/WebGLProgram -->
 
-	<!-- https://threejs.org/docs/#api/renderers/webgl/WebGLProgram -->
-
-	<script id="vertexShader" type="x-shader/x-vertex">
+<script id="vertexShader" type="x-shader/x-vertex">
 
 			precision mediump float;
 			precision mediump int;
@@ -66,7 +64,7 @@
 			// = camera.matrixWorldInverse
 			uniform mat4 viewMatrix;
 
-			// = inverse transpose of modelViewMatrix
+			// = inverse transpose of modelViewMatrixglReadPixels
 			uniform mat3 normalMatrix;
 
 			// = camera position in world space
@@ -79,20 +77,14 @@
 			attribute vec2 uv2;
 
 			varying vec3 vPosition;
-			varying vec4 vColor;
-
 			void main()	{
-
 				vPosition = position;
-				vColor = color;
-
-				gl_Position = modelViewMatrix * vec4( position, 1.0 );
-
+				gl_Position = modelViewMatrix * vec4( uv.x * 2.0 - 1.0, uv.y * 2.0 - 1.0, 1.0, 1.0 );
 			}
 
-		</script>
+</script>
 
-	<script id="fragmentShader" type="x-shader/x-fragment">
+<script id="fragmentShader" type="x-shader/x-fragment">
 
 			precision mediump float;
 			precision mediump int;
@@ -100,160 +92,129 @@
 			uniform float time;
 
 			varying vec3 vPosition;
-			varying vec4 vColor;
-
 			void main()	{
-
-				vec4 color = vec4( vColor );
-				color.r += sin( vPosition.x * 10.0 + time ) * 0.5;				
-
 				gl_FragColor = vec4(vPosition.x, vPosition.y, vPosition.z, 1.0);
-
 			}
 
-		</script>
 
-	<script>
 
-		if (!Detector.webgl) Detector.addGetWebGLMessage();
+</script>
 
-		var container, stats;
+<script>
 
-		var camera, scene, renderer;
+    if (!Detector.webgl) Detector.addGetWebGLMessage();
 
-		init();
-		animate();
+    let container, stats;
 
-		function init() {
+    let camera, scene, renderer;
 
-			container = document.getElementById('container');
+    init();
+    animate();
 
-			camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 10);
-			camera.position.z = 2;
+    function init() {
+        container = document.getElementById('container');
 
-			scene = new THREE.Scene();
-			scene.background = new THREE.Color(0x101010);
+        camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 10);
+        camera.position.z = 2;
 
-			// geometry
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x101010);
 
-			var triangles = 500;
+        // geometry
 
-			var geometry = new THREE.BufferGeometry();
+        const triangles = 500;
+        const geometry = new THREE.BufferGeometry();
 
-			var positions = [];
-			var colors = [];
+        let positions = [
+            -0.5, -1, 1,
+            1, -1, 1,
+            1, 1, 1,
+        ];
 
-			colors = [
-				91.74304347337943,
-				146.6011736953273,
-				217.57974902995548,
+        console.log(positions);
 
-				190.33949424299323,
-				172.4538296671669,
-				28.03684286091241,
+        const positionAttribute = new THREE.Float32BufferAttribute(positions, 3);
+        geometry.addAttribute('position', positionAttribute);
 
-				120.33288248870349,
-				195.14991383097887,
-				109.60443202608928,
+        // material
 
-				55.00917239766229,
-				98.23541567833632,
-				217.39048753846544
-			];
+        const material = new THREE.RawShaderMaterial({
+            uniforms: {
+                time: {value: 1.0}
+            },
+            vertexShader: document.getElementById('vertexShader').textContent,
+            fragmentShader: document.getElementById('fragmentShader').textContent,
+            side: THREE.DoubleSide,
+            transparent: true
 
-			positions2 = [
-				-0.03599148173218225,
-				0.249015380608961,
-				-0.13391156041857188,
+        });
 
-				-0.2612412598208973,
-				0.20965418679772796,
-				0.4695604456586864,
-				
-				-0.06607062135939268,
-				-0.3728506014806019,
-				-0.4830311942872765
-			];
+        const loader = new THREE.OBJLoader();
 
-			positions = [
-				-1, -1, 1,
-				1, -1, 1,
-				1, 1, 1,
-			];
+        loader.load(
+            // resource URL
+            'assets/monkey.obj',
+            // called when resource is loaded
+            (object) => {
+                // scene.add( object );
+                object.traverse(function (child) {
+                    if (child instanceof THREE.Mesh) {
+                        child.material = material;
+                    }
+                    console.log('child: ', child);
+                });
 
-			console.log(positions, colors);
+                scene.add(object);
+                console.log('Loaded object: ', object);
+            }
+        );
 
-			var positionAttribute = new THREE.Float32BufferAttribute(positions, 3);
-			var colorAttribute = new THREE.Uint8BufferAttribute(colors, 4);
+        const mesh = new THREE.Mesh(geometry, material);
+        scene.add(mesh);
 
-			colorAttribute.normalized = true; // this will map the buffer values to 0.0f - +1.0f in the shader
+        renderer = new THREE.WebGLRenderer();
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(1024, 1024);
+        console.log('Renderer: ', renderer);
+        container.appendChild(renderer.domElement);
 
-			geometry.addAttribute('position', positionAttribute);
-			geometry.addAttribute('color', colorAttribute);
+        stats = new Stats();
+        container.appendChild(stats.dom);
 
-			// material
+        window.addEventListener('resize', onWindowResize, false);
+    }
 
-			var material = new THREE.RawShaderMaterial({
+    function onWindowResize(event) {
+        /*camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
 
-				uniforms: {
-					time: { value: 1.0 }
-				},
-				vertexShader: document.getElementById('vertexShader').textContent,
-				fragmentShader: document.getElementById('fragmentShader').textContent,
-				side: THREE.DoubleSide,
-				transparent: true
+        renderer.setSize(window.innerWidth, window.innerHeight);*/
+    }
 
-			});
+    //
 
-			var mesh = new THREE.Mesh(geometry, material);
-			scene.add(mesh);
+    function animate() {
 
-			renderer = new THREE.WebGLRenderer();
-			renderer.setPixelRatio(window.devicePixelRatio);
-			renderer.setSize(512, 512);
-			container.appendChild(renderer.domElement);
+        requestAnimationFrame(animate);
 
-			stats = new Stats();
-			container.appendChild(stats.dom);
+        render();
+        stats.update();
 
-			window.addEventListener('resize', onWindowResize, false);
+    }
 
-		}
+    function render() {
 
-		function onWindowResize(event) {
+        const time = performance.now();
+        const object = scene.children[0];
 
-			camera.aspect = window.innerWidth / window.innerHeight;
-			camera.updateProjectionMatrix();
+        // object.rotation.y = time * 0.0005;
+        // object.material.uniforms.time.value = time * 0.005;
 
-			renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.render(scene, camera);
 
-		}
+    }
 
-		//
-
-		function animate() {
-
-			requestAnimationFrame(animate);
-
-			render();
-			stats.update();
-
-		}
-
-		function render() {
-
-			var time = performance.now();
-
-			var object = scene.children[0];
-
-			// object.rotation.y = time * 0.0005;
-			// object.material.uniforms.time.value = time * 0.005;
-
-			renderer.render(scene, camera);
-
-		}
-
-	</script>
+</script>
 
 </body>
 
